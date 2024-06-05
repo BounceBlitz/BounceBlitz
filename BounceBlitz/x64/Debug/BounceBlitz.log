@@ -1,0 +1,15 @@
+﻿  main.cpp
+C:\Users\USER\source\repos\External Libs\GLFW\include\GLFW\glfw3.h(3235,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+  (소스 파일 'main.cpp'을(를) 컴파일하는 중)
+  
+C:\Users\USER\source\repos\utils\cube.h(129,76): warning C4312: '형식 캐스트': 'unsigned int'에서 더 큰 'void *'(으)로의 변환입니다.
+  (소스 파일 'main.cpp'을(를) 컴파일하는 중)
+  
+C:\Users\USER\source\repos\utils\cube.h(130,76): warning C4312: '형식 캐스트': 'unsigned int'에서 더 큰 'void *'(으)로의 변환입니다.
+  (소스 파일 'main.cpp'을(를) 컴파일하는 중)
+  
+C:\Users\USER\source\repos\utils\cube.h(131,76): warning C4312: '형식 캐스트': 'unsigned int'에서 더 큰 'void *'(으)로의 변환입니다.
+  (소스 파일 'main.cpp'을(를) 컴파일하는 중)
+  
+C:\Users\USER\source\repos\Computer Graphics\BounceBlitz\BounceBlitz\main.cpp(63,28): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  BounceBlitz.vcxproj -> C:\Users\USER\source\repos\Computer Graphics\BounceBlitz\x64\Debug\BounceBlitz.exe

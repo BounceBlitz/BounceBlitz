@@ -1,0 +1,5 @@
+
+*.ipch
+/x64/Debug
+*.vsidx
+/.vs/BounceBlitz/v17
