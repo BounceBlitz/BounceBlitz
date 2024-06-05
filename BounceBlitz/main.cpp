@@ -3,11 +3,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <vector>
 #include "shader.h"
 #include "cube.h"
 #include "arcball.h"
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -18,16 +18,25 @@ const unsigned int SCR_HEIGHT = 600;
 bool isJumping = false;
 float jumpVelocity = 0.0f;
 float gravity = -9.8f;
-float ballY = 0.0f;
+float ballY = 0.5f; // Adjusted to start above the platform
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 Arcball arcball(SCR_WIDTH, SCR_HEIGHT, 0.1f, true, true);
 
+// Define the platform dimensions and position
+glm::vec3 platformPosition(0.0f, -1.0f, 0.0f);
+glm::vec3 platformSize(2.0f, 0.2f, 2.0f); // Width, Height, Depth
+
+// Define the ball size (assuming it's a sphere with a uniform radius)
+float ballRadius = 0.5f;
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow* window);
+
+bool checkCollision(glm::vec3 ballPosition, float ballRadius, glm::vec3 platformPosition, glm::vec3 platformSize);
 
 int main()
 {
@@ -79,9 +88,10 @@ int main()
             float sinPhi = sin(phi);
             float cosPhi = cos(phi);
 
-            float x = cosPhi * sinTheta;
-            float y = cosTheta;
-            float z = sinPhi * sinTheta;
+            // Adjust the size to be half
+            float x = 0.5f * cosPhi * sinTheta; // Adjusted size to half
+            float y = 0.5f * cosTheta;          // Adjusted size to half
+            float z = 0.5f * sinPhi * sinTheta; // Adjusted size to half
             sphereVertices.push_back(x);
             sphereVertices.push_back(y);
             sphereVertices.push_back(z);
@@ -135,12 +145,16 @@ int main()
         processInput(window);
 
         // Apply gravity
-        if (ballY > 0.0f || isJumping) {
+        glm::vec3 ballPosition(0.0f, ballY, 0.0f);
+        if (!checkCollision(ballPosition, ballRadius, platformPosition, platformSize) || isJumping) {
+            if (checkCollision(ballPosition, ballRadius, platformPosition, platformSize)) {
+                isJumping = false;
+            }
             ballY += jumpVelocity * deltaTime;
             jumpVelocity += gravity * deltaTime;
         }
         else {
-            ballY = 0.0f;
+            //ballY = platformPosition.y + platformSize.y + ballRadius;
             isJumping = false;
             jumpVelocity = 0.0f;
         }
@@ -157,21 +171,23 @@ int main()
         ourShader.setMat4("projection", projection);
 
         // View matrix with arcball
-        glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f);
+        glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f); // Distance of 5 units from the origin
         glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
         glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, glm::vec3(0.0f, 1.0f, 0.0f)) * arcball.createRotationMatrix();
         ourShader.setMat4("view", view);
 
         // Render platform
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0f));
+        model = glm::translate(model, platformPosition);
         ourShader.setMat4("model", model);
+        ourShader.setVec3("objectColor", glm::vec3(0.0f, 0.0f, 1.0f)); // Set platform color to blue
         platform.draw(&ourShader);
 
         // Render ball
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, ballY, 0.0f));
         ourShader.setMat4("model", model);
+        ourShader.setVec3("objectColor", glm::vec3(1.0f, 0.0f, 0.0f)); // Set ball color to red
         glBindVertexArray(sphereVAO);
         glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
 
@@ -185,6 +201,7 @@ int main()
     return 0;
 }
 
+
 // Process input
 void processInput(GLFWwindow* window)
 {
@@ -195,6 +212,18 @@ void processInput(GLFWwindow* window)
         isJumping = true;
         jumpVelocity = 5.0f;
     }
+}
+
+// Collision detection function
+bool checkCollision(glm::vec3 ballPosition, float ballRadius, glm::vec3 platformPosition, glm::vec3 platformSize) {
+    float ballBottom = ballPosition.y;
+    float platformTop = platformPosition.y - 2.0f * platformSize.y;
+    bool temp = ballBottom <= platformTop && ballPosition.x >= platformPosition.x - platformSize.x / 2.0f &&
+        ballPosition.x <= platformPosition.x + platformSize.x / 2.0f &&
+        ballPosition.z >= platformPosition.z - platformSize.z / 2.0f &&
+        ballPosition.z <= platformPosition.z + platformSize.z / 2.0;
+    //cout << temp;
+    return temp;
 }
 
 // GLFW: when the window size changed (by OS or user resize) this callback function executes
