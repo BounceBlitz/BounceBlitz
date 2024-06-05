@@ -15,8 +15,8 @@ using namespace std;
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-bool isJumping = false;
-float jumpVelocity = 0.0f;
+bool isJumping = true;  // Start in a jumping state for continuous bounce
+float jumpVelocity = 5.0f;  // Initial velocity for bouncing
 float gravity = -9.8f;
 float ballY = 0.5f; // Adjusted to start above the platform
 float deltaTime = 0.0f;
@@ -34,12 +34,21 @@ float ballRadius = 0.5f;
 // Global variable for ball position
 glm::vec3 ballPosition(0.0f, ballY, 0.0f);
 
+// Camera parameters
+float cameraDistance = 5.0f;
+float cameraHeight = 2.0f;
+float cameraAngle = 0.0f; // Angle around the ball
+float mouseSensitivity = 0.1f; // Sensitivity of the mouse movement
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow* window);
 
 bool checkCollision(glm::vec3 ballPosition, float ballRadius, glm::vec3 platformPosition, glm::vec3 platformSize);
+
+double lastX = SCR_WIDTH / 2.0f; // Last X position of the mouse
+bool firstMouse = true; // Whether the mouse is first moved
 
 int main()
 {
@@ -50,7 +59,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Create window
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "3D Bounce Ball Game", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "BounceBlitz", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -147,18 +156,14 @@ int main()
         // Input
         processInput(window);
 
-        // Apply gravity
-        if (!checkCollision(ballPosition, ballRadius, platformPosition, platformSize) || isJumping) {
-            if (checkCollision(ballPosition, ballRadius, platformPosition, platformSize)) {
-                isJumping = false;
-            }
-            ballPosition.y += jumpVelocity * deltaTime;
-            jumpVelocity += gravity * deltaTime;
-        }
-        else {
-            isJumping = false;
-            jumpVelocity = 0.0f;
-            //ballPosition.y = platformPosition.y + platformSize.y + ballRadius; // Adjust the ball height to be on the platform
+        // Apply gravity and bounce logic
+        ballPosition.y += jumpVelocity * deltaTime;
+        jumpVelocity += gravity * deltaTime;
+
+        // Check for collision with platform and bounce
+        if (ballPosition.y + ballRadius <= platformPosition.y - platformSize.y * 1.0f) {
+            ballPosition.y = platformPosition.y - platformSize.y * 1.0f - ballRadius; // Adjust ball position to be on top of the platform
+            jumpVelocity = -jumpVelocity; // Reverse velocity to simulate bounce
         }
 
         // Render
@@ -172,10 +177,11 @@ int main()
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         ourShader.setMat4("projection", projection);
 
-        // View matrix with arcball
-        glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f); // Distance of 5 units from the origin
-        glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-        glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, glm::vec3(0.0f, 1.0f, 0.0f)) * arcball.createRotationMatrix();
+        // View matrix with arcball, updated to follow the ball
+        float camX = ballPosition.x + cameraDistance * cos(glm::radians(cameraAngle));
+        float camZ = ballPosition.z + cameraDistance * sin(glm::radians(cameraAngle));
+        glm::vec3 cameraPos = glm::vec3(camX, ballPosition.y + cameraHeight, camZ);
+        glm::mat4 view = glm::lookAt(cameraPos, ballPosition, glm::vec3(0.0f, 1.0f, 0.0f));
         ourShader.setMat4("view", view);
 
         // Render platform
@@ -200,7 +206,7 @@ int main()
 
     // Terminate GLFW
     glfwTerminate();
-    return -1;
+    return 0;
 }
 
 // Process input
@@ -208,11 +214,6 @@ void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !isJumping) {
-        isJumping = true;
-        jumpVelocity = 5.0f;
-    }
 
     float ballSpeed = 2.5f * deltaTime; // Speed of ball movement
 
@@ -229,7 +230,7 @@ void processInput(GLFWwindow* window)
 // Collision detection function
 bool checkCollision(glm::vec3 ballPosition, float ballRadius, glm::vec3 platformPosition, glm::vec3 platformSize) {
     float ballBottom = ballPosition.y;
-    float platformTop = platformPosition.y - 2.0f * platformSize.y;
+    float platformTop = platformPosition.y - platformSize.y;
     bool temp = ballBottom <= platformTop && ballPosition.x >= platformPosition.x - platformSize.x / 2.0f &&
         ballPosition.x <= platformPosition.x + platformSize.x / 2.0f &&
         ballPosition.z >= platformPosition.z - platformSize.z / 2.0f &&
@@ -252,5 +253,16 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 // Cursor position callback
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
-    arcball.cursorCallback(window, xpos, ypos);
+    if (firstMouse)
+    {
+        lastX = xpos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    lastX = xpos;
+
+    xoffset *= mouseSensitivity;
+
+    cameraAngle -= xoffset;
 }
