@@ -161,9 +161,17 @@ int main()
         jumpVelocity += gravity * deltaTime;
 
         // Check for collision with platform and bounce
-        if (ballPosition.y + ballRadius <= platformPosition.y - platformSize.y * 1.0f) {
-            ballPosition.y = platformPosition.y - platformSize.y * 1.0f - ballRadius; // Adjust ball position to be on top of the platform
-            jumpVelocity = -jumpVelocity; // Reverse velocity to simulate bounce
+        if (ballPosition.y + ballRadius <= platformPosition.y - platformSize.y) {
+            if (checkCollision(ballPosition, ballRadius, platformPosition, platformSize)) {
+                ballPosition.y = platformPosition.y - platformSize.y - ballRadius; // Adjust ball position to be on top of the platform
+                jumpVelocity = -jumpVelocity; // Reverse velocity to simulate bounce
+            }
+        }
+
+        // Check if ball falls below -30 on y-axis
+        if (ballPosition.y < -30.0f) {
+            std::cout << "You died" << std::endl;
+            break;
         }
 
         // Render
@@ -218,24 +226,26 @@ void processInput(GLFWwindow* window)
     float ballSpeed = 2.5f * deltaTime; // Speed of ball movement
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        ballPosition.z -= ballSpeed; // Move forward
+        ballPosition.x -= ballSpeed; // Move forward
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        ballPosition.z += ballSpeed; // Move backward
+        ballPosition.x += ballSpeed; // Move backward
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        ballPosition.x -= ballSpeed; // Move left
+        ballPosition.z += ballSpeed; // Move left
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        ballPosition.x += ballSpeed; // Move right
+        ballPosition.z -= ballSpeed; // Move right
 }
 
 // Collision detection function
 bool checkCollision(glm::vec3 ballPosition, float ballRadius, glm::vec3 platformPosition, glm::vec3 platformSize) {
-    float ballBottom = ballPosition.y;
-    float platformTop = platformPosition.y - platformSize.y;
-    bool temp = ballBottom <= platformTop && ballPosition.x >= platformPosition.x - platformSize.x / 2.0f &&
-        ballPosition.x <= platformPosition.x + platformSize.x / 2.0f &&
-        ballPosition.z >= platformPosition.z - platformSize.z / 2.0f &&
-        ballPosition.z <= platformPosition.z + platformSize.z / 2.0;
-    return temp;
+    float ballBottom = ballPosition.y - ballRadius;
+    float platformTop = platformPosition.y + platformSize.y / 2.0f;
+
+    bool collisionX = ballPosition.x + ballRadius / 2.0f >= platformPosition.x - platformSize.x / 2.0f &&
+        ballPosition.x - ballRadius / 2.0f <= platformPosition.x + platformSize.x / 2.0f;
+    bool collisionZ = ballPosition.z + ballRadius / 2.0f >= platformPosition.z - platformSize.z / 2.0f &&
+        ballPosition.z - ballRadius / 2.0f <= platformPosition.z + platformSize.z / 2.0f;
+
+    return collisionX && collisionZ;
 }
 
 // GLFW: when the window size changed (by OS or user resize) this callback function executes

@@ -19,7 +19,6 @@ C:\Users\USER\source\repos\utils\arcball.h(82,27): warning C4244:         ]
   (소스 파일 'main.cpp'을(를) 컴파일하는 중)
   
 C:\Users\USER\source\repos\Computer Graphics\BounceBlitz\BounceBlitz\main.cpp(152,28): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\USER\source\repos\Computer Graphics\BounceBlitz\BounceBlitz\main.cpp(200,56): warning C4267: '인수': 'size_t'에서 'GLsizei'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\USER\source\repos\Computer Graphics\BounceBlitz\BounceBlitz\main.cpp(262,19): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-LINK : warning LNK4098: 'MSVCRT' defaultlib가 다른 라이브러리와 충돌합니다. /NODEFAULTLIB:library를 사용하십시오.
+C:\Users\USER\source\repos\Computer Graphics\BounceBlitz\BounceBlitz\main.cpp(208,56): warning C4267: '인수': 'size_t'에서 'GLsizei'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\USER\source\repos\Computer Graphics\BounceBlitz\BounceBlitz\main.cpp(272,19): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   BounceBlitz.vcxproj -> C:\Users\USER\source\repos\Computer Graphics\BounceBlitz\x64\Debug\BounceBlitz.exe
