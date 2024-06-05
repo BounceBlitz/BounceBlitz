@@ -31,6 +31,9 @@ glm::vec3 platformSize(2.0f, 0.2f, 2.0f); // Width, Height, Depth
 // Define the ball size (assuming it's a sphere with a uniform radius)
 float ballRadius = 0.5f;
 
+// Global variable for ball position
+glm::vec3 ballPosition(0.0f, ballY, 0.0f);
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
@@ -145,18 +148,17 @@ int main()
         processInput(window);
 
         // Apply gravity
-        glm::vec3 ballPosition(0.0f, ballY, 0.0f);
         if (!checkCollision(ballPosition, ballRadius, platformPosition, platformSize) || isJumping) {
             if (checkCollision(ballPosition, ballRadius, platformPosition, platformSize)) {
                 isJumping = false;
             }
-            ballY += jumpVelocity * deltaTime;
+            ballPosition.y += jumpVelocity * deltaTime;
             jumpVelocity += gravity * deltaTime;
         }
         else {
-            //ballY = platformPosition.y + platformSize.y + ballRadius;
             isJumping = false;
             jumpVelocity = 0.0f;
+            //ballPosition.y = platformPosition.y + platformSize.y + ballRadius; // Adjust the ball height to be on the platform
         }
 
         // Render
@@ -185,7 +187,7 @@ int main()
 
         // Render ball
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, ballY, 0.0f));
+        model = glm::translate(model, ballPosition);
         ourShader.setMat4("model", model);
         ourShader.setVec3("objectColor", glm::vec3(1.0f, 0.0f, 0.0f)); // Set ball color to red
         glBindVertexArray(sphereVAO);
@@ -198,9 +200,8 @@ int main()
 
     // Terminate GLFW
     glfwTerminate();
-    return 0;
+    return -1;
 }
-
 
 // Process input
 void processInput(GLFWwindow* window)
@@ -212,6 +213,17 @@ void processInput(GLFWwindow* window)
         isJumping = true;
         jumpVelocity = 5.0f;
     }
+
+    float ballSpeed = 2.5f * deltaTime; // Speed of ball movement
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        ballPosition.z -= ballSpeed; // Move forward
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        ballPosition.z += ballSpeed; // Move backward
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        ballPosition.x -= ballSpeed; // Move left
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        ballPosition.x += ballSpeed; // Move right
 }
 
 // Collision detection function
@@ -222,7 +234,6 @@ bool checkCollision(glm::vec3 ballPosition, float ballRadius, glm::vec3 platform
         ballPosition.x <= platformPosition.x + platformSize.x / 2.0f &&
         ballPosition.z >= platformPosition.z - platformSize.z / 2.0f &&
         ballPosition.z <= platformPosition.z + platformSize.z / 2.0;
-    //cout << temp;
     return temp;
 }
 
