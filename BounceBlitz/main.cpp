@@ -1,24 +1,27 @@
-﻿#include <GL/glew.h>
+﻿#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h" // Include stb_image for loading images
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <ft2build.h>
-#include FT_FREETYPE_H
 #include "shader.h"
 #include "cube.h"
 #include "arcball.h"
 #include <iostream>
 #include <vector>
-#include <map>
 #include <cstdlib> // For rand function
 #include <ctime>   // For time function
+#include <windows.h>
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
+
 
 using namespace std;
 
 // Settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1200;
+const unsigned int SCR_HEIGHT = 800;
 
 bool isJumping = true;  // Start in a jumping state for continuous bounce
 float jumpVelocity = 5.0f;  // Initial velocity for bouncing
@@ -52,6 +55,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow* window);
+void playBounceSound();
 
 bool checkCollision(glm::vec3 ballPosition, float ballRadius, glm::vec3 platformPosition, glm::vec3 platformSize);
 
@@ -59,131 +63,6 @@ double lastX = SCR_WIDTH / 2.0f; // Last X position of the mouse
 bool firstMouse = true; // Whether the mouse is first moved
 
 int bounceCount = 0; // Counter to track number of bounces
-
-// Structure to hold character information
-struct Character {
-    GLuint TextureID;   // ID handle of the glyph texture
-    glm::ivec2 Size;    // Size of glyph
-    glm::ivec2 Bearing; // Offset from baseline to left/top of glyph
-    GLuint Advance;     // Offset to advance to next glyph
-};
-
-std::map<GLchar, Character> Characters;
-GLuint VAO, VBO;
-
-// Function to initialize FreeType and load font
-void initFreeType(Shader &textShader) {
-    // Initialize FreeType
-    FT_Library ft;
-    if (FT_Init_FreeType(&ft)) {
-        std::cerr << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
-        return;
-    }
-
-    // Load font
-    FT_Face face;
-    if (FT_New_Face(ft, "path/to/your/font.ttf", 0, &face)) {
-        std::cerr << "ERROR::FREETYPE: Failed to load font" << std::endl;
-        return;
-    }
-
-    FT_Set_Pixel_Sizes(face, 0, 48);
-
-    // Load first 128 characters of the ASCII set
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction
-    for (GLubyte c = 0; c < 128; c++) {
-        // Load character glyph
-        if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
-            std::cerr << "ERROR::FREETYPE: Failed to load Glyph" << std::endl;
-            continue;
-        }
-        // Generate texture
-        GLuint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            GL_RED,
-            face->glyph->bitmap.width,
-            face->glyph->bitmap.rows,
-            0,
-            GL_RED,
-            GL_UNSIGNED_BYTE,
-            face->glyph->bitmap.buffer
-        );
-        // Set texture options
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // Store character for later use
-        Character character = {
-            texture,
-            glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-            glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-            face->glyph->advance.x
-        };
-        Characters.insert(std::pair<GLchar, Character>(c, character));
-    }
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // Destroy FreeType once we're done
-    FT_Done_Face(face);
-    FT_Done_FreeType(ft);
-
-    // Configure VAO/VBO for texture quads
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
-
-// Function to render text
-void renderText(Shader &shader, std::string text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color) {
-    // Activate corresponding render state
-    shader.use();
-    glUniform3f(glGetUniformLocation(shader.ID, "textColor"), color.x, color.y, color.z);
-    glActiveTexture(GL_TEXTURE0);
-    glBindVertexArray(VAO);
-
-    // Iterate through all characters
-    std::string::const_iterator c;
-    for (c = text.begin(); c != text.end(); c++) {
-        Character ch = Characters[*c];
-
-        GLfloat xpos = x + ch.Bearing.x * scale;
-        GLfloat ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
-
-        GLfloat w = ch.Size.x * scale;
-        GLfloat h = ch.Size.y * scale;
-        // Update VBO for each character
-        GLfloat vertices[6][4] = {
-            { xpos,     ypos + h,   0.0, 0.0 },
-            { xpos,     ypos,       0.0, 1.0 },
-            { xpos + w, ypos,       1.0, 1.0 },
-
-            { xpos,     ypos + h,   0.0, 0.0 },
-            { xpos + w, ypos,       1.0, 1.0 },
-            { xpos + w, ypos + h,   1.0, 0.0 }
-        };
-        // Render glyph texture over quad
-        glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-        // Update content of VBO memory
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        // Render quad
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-    }
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
 
 int main()
 {
@@ -220,10 +99,6 @@ int main()
 
     // Build and compile shader program
     Shader ourShader("3.3.shader.vs", "3.3.shader.fs");
-    Shader textShader("text.vs", "text.fs");
-
-    // Initialize FreeType
-    initFreeType(textShader);
 
     // Define sphere vertices
     const int LATITUDE_COUNT = 18;
@@ -305,7 +180,8 @@ int main()
         if (ballPosition.y + ballRadius <= platformPosition.y - platformSize.y) {
             if (checkCollision(ballPosition, ballRadius, platformPosition, platformSize)) {
                 ballPosition.y = platformPosition.y - platformSize.y - ballRadius; // Adjust ball position to be on top of the platform
-                jumpVelocity = -jumpVelocity; // Reverse velocity to simulate bounce
+                jumpVelocity = -jumpVelocity * 0.95; // Reverse velocity to simulate bounce
+                playBounceSound();
                 bounceCount++; // Increment bounce count
 
                 // Check if platform needs to be relocated
@@ -330,7 +206,7 @@ int main()
 
         // Check if ball falls below -30 on y-axis
         if (ballPosition.y < -30.0f) {
-            std::cout << "You died" << std::endl;
+            std::cout << "You died\nPoints: " << points << std::endl;
             break;
         }
 
@@ -367,8 +243,22 @@ int main()
         glBindVertexArray(sphereVAO);
         glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
 
-        // Render point counter
-        renderText(textShader, "Points: " + std::to_string(points), 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f)); // Adjust position and color as needed
+        // Render points as white circles
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        glOrtho(0, SCR_WIDTH, 0, SCR_HEIGHT, -1, 1);
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        glColor3f(1.0f, 1.0f, 1.0f); // Set color to white
+
+
+        glPopMatrix();
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
 
         // Swap buffers and poll IO events
         glfwSwapBuffers(window);
@@ -380,6 +270,11 @@ int main()
     return 0;
 }
 
+
+void playBounceSound() {
+    PlaySound(TEXT("bounce.wav"), NULL, SND_FILENAME | SND_ASYNC);
+}
+
 // Process input
 void processInput(GLFWwindow* window)
 {
@@ -388,14 +283,16 @@ void processInput(GLFWwindow* window)
 
     float ballSpeed = 2.5f * deltaTime; // Speed of ball movement
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        ballPosition.x -= ballSpeed; // Move forward
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        ballPosition.x += ballSpeed; // Move backward
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        ballPosition.z += ballSpeed; // Move left
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        ballPosition.z -= ballSpeed; // Move right
+    if (ballPosition.y >= -1) {
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            ballPosition.x -= ballSpeed; // Move forward
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            ballPosition.x += ballSpeed; // Move backward
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            ballPosition.z += ballSpeed; // Move left
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            ballPosition.z -= ballSpeed; // Move right
+    }
 }
 
 // Collision detection function
@@ -403,10 +300,11 @@ bool checkCollision(glm::vec3 ballPosition, float ballRadius, glm::vec3 platform
     float ballBottom = ballPosition.y - ballRadius;
     float platformTop = platformPosition.y + platformSize.y / 2.0f;
 
-    bool collisionX = ballPosition.x + ballRadius / 2.0f >= platformPosition.x - platformSize.x / 2.0f &&
-        ballPosition.x - ballRadius / 2.0f <= platformPosition.x + platformSize.x / 2.0f;
-    bool collisionZ = ballPosition.z + ballRadius / 2.0f >= platformPosition.z - platformSize.z / 2.0f &&
-        ballPosition.z - ballRadius / 2.0f <= platformPosition.z + platformSize.z / 2.0f;
+    bool collisionX = ballPosition.x + ballRadius >= platformPosition.x - platformSize.x / 2.0f &&
+        ballPosition.x - ballRadius <= platformPosition.x + platformSize.x / 2.0f;
+    bool collisionZ = ballPosition.z + ballRadius >= platformPosition.z - platformSize.z / 2.0f &&
+        ballPosition.z - ballRadius <= platformPosition.z + platformSize.z / 2.0f;
+
 
     return collisionX && collisionZ;
 }

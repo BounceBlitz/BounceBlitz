@@ -2,4 +2,36 @@
 C:\Users\admin\source\repos\CG\External Libs\GLFW\include\GLFW\glfw3.h(3235,1): warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
   (소스 파일 'main.cpp'을(를) 컴파일하는 중)
   
-C:\Users\admin\source\repos\CG\projects\BounceBlitz\BounceBlitz\main.cpp(6,10): error C1083: 포함 파일을 열 수 없습니다. 'ft2build.h': No such file or directory
+C:\Users\admin\source\repos\CG\utils\cube.h(129,76): warning C4312: '형식 캐스트': 'unsigned int'에서 더 큰 'void *'(으)로의 변환입니다.
+  (소스 파일 'main.cpp'을(를) 컴파일하는 중)
+  
+C:\Users\admin\source\repos\CG\utils\cube.h(130,76): warning C4312: '형식 캐스트': 'unsigned int'에서 더 큰 'void *'(으)로의 변환입니다.
+  (소스 파일 'main.cpp'을(를) 컴파일하는 중)
+  
+C:\Users\admin\source\repos\CG\utils\cube.h(131,76): warning C4312: '형식 캐스트': 'unsigned int'에서 더 큰 'void *'(으)로의 변환입니다.
+  (소스 파일 'main.cpp'을(를) 컴파일하는 중)
+  
+C:\Users\admin\source\repos\CG\utils\arcball.h(82,27): warning C4244: '=': 'double'에서 'T'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\admin\source\repos\CG\utils\arcball.h(82,27): warning C4244:         with
+C:\Users\admin\source\repos\CG\utils\arcball.h(82,27): warning C4244:         [
+C:\Users\admin\source\repos\CG\utils\arcball.h(82,27): warning C4244:             T=float
+C:\Users\admin\source\repos\CG\utils\arcball.h(82,27): warning C4244:         ]
+  (소스 파일 'main.cpp'을(를) 컴파일하는 중)
+  
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\minwindef.h(130,1): warning C4005: 'APIENTRY': 매크로 재정의
+  (소스 파일 'main.cpp'을(를) 컴파일하는 중)
+  C:\Users\admin\source\repos\CG\External Libs\GLFW\include\GLFW\glfw3.h(123,1):
+  'APIENTRY'의 이전 정의를 참조하십시오.
+  
+C:\Users\admin\source\repos\CG\projects\BounceBlitz\BounceBlitz\main.cpp(69,15): warning C4244: '인수': 'time_t'에서 'unsigned int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\admin\source\repos\CG\projects\BounceBlitz\BounceBlitz\main.cpp(168,28): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\admin\source\repos\CG\projects\BounceBlitz\BounceBlitz\main.cpp(183,46): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\admin\source\repos\CG\projects\BounceBlitz\BounceBlitz\main.cpp(189,34): warning C4305: '+=': 'double'에서 'float'(으)로 잘립니다.
+C:\Users\admin\source\repos\CG\projects\BounceBlitz\BounceBlitz\main.cpp(191,36): warning C4244: '초기화 중': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\admin\source\repos\CG\projects\BounceBlitz\BounceBlitz\main.cpp(192,36): warning C4244: '초기화 중': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\admin\source\repos\CG\projects\BounceBlitz\BounceBlitz\main.cpp(196,56): warning C4244: '=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\admin\source\repos\CG\projects\BounceBlitz\BounceBlitz\main.cpp(197,56): warning C4244: '=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\admin\source\repos\CG\projects\BounceBlitz\BounceBlitz\main.cpp(244,56): warning C4267: '인수': 'size_t'에서 'GLsizei'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\admin\source\repos\CG\projects\BounceBlitz\BounceBlitz\main.cpp(333,19): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+LINK : warning LNK4098: 'MSVCRT' defaultlib가 다른 라이브러리와 충돌합니다. /NODEFAULTLIB:library를 사용하십시오.
+  BounceBlitz.vcxproj -> C:\Users\admin\source\repos\CG\projects\BounceBlitz\x64\Debug\BounceBlitz.exe
